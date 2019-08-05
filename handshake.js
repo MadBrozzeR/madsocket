@@ -18,6 +18,8 @@ const HSTemplate = (
   'Sec-WebSocket-Accept: ${key}\r\n\r\n'
 );
 
+const BadRequestTemplate = 'HTTP/1.1 400 Bad Request\r\n\r\n';
+
 function getHead (plain) {
   let rows = plain.split(CONST.CRLF);
   const first = HTTP_METHOD_LINE_RE.exec(rows.shift());
@@ -39,28 +41,43 @@ function getHead (plain) {
 
 function getHttpPayload (data) {
   data = data.toString();
-  const separatorPosition = data.indexOf(EMPTY_LINE);
-  let message = getHead(data.substring(0, separatorPosition));
-  message.body = data.substring(separatorPosition + 2);
+  let message;
+
+  try {
+    const separatorPosition = data.indexOf(EMPTY_LINE);
+    message = getHead(data.substring(0, separatorPosition));
+    message.body = data.substring(separatorPosition + 2);
+  } catch (error) {
+    message = null;
+  }
 
   return message;
 }
 
-function getResponse (payload) {
-  const key = payload.headers[WSKEY];
-  let response = '';
+function getAccept (key) {
+  let hash = crypto.createHash(SHA1);
+  hash.update(key + MAGIC);
+  return hash.digest(BASE64);
+}
 
-  if (key && payload.headers.upgrade === WEBSOCKET) {
-    let hash = crypto.createHash(SHA1);
-    hash.update(key + MAGIC);
-    const accept = hash.digest(BASE64);
-    response = HSTemplate.replace(REPLACE_KEY, accept);
+function getResponse (payload) {
+  let response;
+
+  if (payload && payload.headers[WSKEY] && payload.headers.upgrade === WEBSOCKET) {
+    response = HSTemplate.replace(REPLACE_KEY, getAccept(payload.headers[WSKEY]));
+  } else {
+    response = '';
   }
 
   return response;
 }
 
+function getBadResponse () {
+  return BadRequestTemplate;
+}
+
 module.exports = {
   getResponse: getResponse,
-  getHttpPayload: getHttpPayload
+  getHttpPayload: getHttpPayload,
+  getBadResponse: getBadResponse
 };

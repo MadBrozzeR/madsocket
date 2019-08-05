@@ -1,7 +1,7 @@
 const Reader = require('mbr-buffer').Reader;
 const Writer = require('mbr-buffer').Writer;
 
-const INT_PARAMS = { littleEndian: false, unsigned: false };
+const INT_PARAMS = { littleEndian: false, unsigned: true };
 
 function decode (data) {
   const reader = new Reader(data);
@@ -38,7 +38,6 @@ function encode (data) {
     data = Buffer.from(data);
   }
   const payloadLength = data.length;
-  let writer = new Writer({bigEndian: true});
   let flags = 0x8100;
   const result = [];
 
