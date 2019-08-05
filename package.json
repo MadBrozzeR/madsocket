@@ -1,0 +1,26 @@
+{
+  "name": "madsocket",
+  "version": "0.5.0",
+  "description": "Web-Socket server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/madbrozzer/madsocket.js.git"
+  },
+  "keywords": [
+    "websocket",
+    "socket"
+  ],
+  "author": "MadBrozzeR",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/madbrozzer/madsocket.js/issues"
+  },
+  "homepage": "https://github.com/madbrozzer/madsocket.js#readme",
+  "dependencies": {
+    "mbr-buffer": "^1.2.2"
+  }
+}
