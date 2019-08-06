@@ -2,6 +2,7 @@ const net = require('net');
 const Encoder = require('./encoder.js');
 const Handshake = require('./handshake.js');
 const Client = require('./client.js');
+const proceedCommandFrame = require('./command-frames.js');
 
 const EMPTY = {};
 const CLOSE = 'close';
@@ -32,7 +33,12 @@ function bind (socket, payload) {
 
     function onData (data) {
       server.debug('client', data);
-      listeners.data && listeners.data.call(client, Encoder.decode(data));
+
+      const frame = Encoder.decode(data);
+
+      if (!proceedCommandFrame(frame, client)) {
+        listeners.data && listeners.data.call(client, frame.data);
+      }
     };
     function onClose () {
       client.active = false;

@@ -29,8 +29,12 @@ const page = `
           var input = document.getElementById('input');
           var message = input.value;
           input.value = '';
-          toChat('You: ' + message);
-          ws.send(message);
+          if (message === 'exit') {
+            ws.close(1000);
+          } else {
+            toChat('You: ' + message);
+            ws.send(message);
+          }
         }
 
         function keypress (event) {
@@ -94,7 +98,9 @@ const ws = new MadSocket({
   },
   data: function (data) {
     console.log('Client wrote: ', data);
-    if (clients.length === 1) {
+    if (data.toString() === 'quit') {
+      this.close(1000);
+    } else if (clients.length === 1) {
       this.send(data.toString().split('').reverse().join(''));
     } else {
       for (let index = 0 ; index < clients.length ; ++index) {
@@ -103,6 +109,9 @@ const ws = new MadSocket({
         }
       }
     }
+  },
+  error: function (error) {
+    console.log(error);
   }
 }, {
   debug: function (type, data) {
