@@ -19,17 +19,19 @@ Initialization of WebSocket instance. Yet it does nothing more than just exists 
 ### props
 
 Second argument for constructor function. But since it more simple I'll start with it.
-Currently this object supports only one property.
 
 ```
 {
-  timeout: 0
+  timeout: 0,
+  debug: function (type, buffer) {}
 }
 ```
 
-*timeout* - Maximum time of inactivity for one socket connection in milliseconds.
+*timeout* - Optional. Maximum time of inactivity for one socket connection in milliseconds.
 After time has passed inactive socket is being automatically disconnected.
 Default value is 0, which means infinite time, and socket will never be automatically disconnected.
+
+*debug* - Optional. Some events are being passed to this function.
 
 ### listeners
 
@@ -40,6 +42,8 @@ First argument for constructor function. There we should describe all valuable a
   start: function () {},        // Server is listening for income connections.
   close: function () {},        // Server is no more listening.
 
+  error: function (error) {},   // Some error occured.
+
   connect: function () {},      // Client connected to server.
   disconnect: function () {},   // Client disconnected from server.
   data: function (message) {}   // Client sent message
@@ -49,6 +53,8 @@ First argument for constructor function. There we should describe all valuable a
 All listeners are optional, and you can ommit any listener that you are not interested in.
 
 First two listeners are server related. They get no arguments, but has MadSocket instance as a context (`this`).
+
+`error` events can be emitted by either MadSocket of Client instances. Error itself is being passed as an argument.
 
 All other listeners are Client relative. They all get Client instance as a context (`this`), and only `data` listener
 receives actual message as function argument.
@@ -118,3 +124,24 @@ client.close();
 ```
 
 Disconnect client from WebSocket server.
+
+## Live chat example
+
+For more real example you can start simple server by this command:
+
+```
+node live-test.js
+```
+
+It will start Web server with WebSocket on port 8090. You can connect to it by browser:
+
+```
+http://localhost:8090/
+```
+
+If only one client is connected, then server will reply with reversed messages (i.e. 'You: asd!' => 'Server: !dsa').
+
+If more then one client is connected (multiple browsers, multiple tabs of one browser, remote connections), then
+it behaves like a real... well, almost real chat: you send message and all other participants can read it.
+
+Feel free to reference this code for your needs.

@@ -8,6 +8,7 @@ const CLOSE = 'close';
 const CONNECTION = 'connection';
 const DATA = 'data';
 const TIMEOUT = 'timeout';
+const ERROR = 'error';
 const DEFAULT_TIMEOUT = 0;
 
 function bind (socket, payload) {
@@ -40,9 +41,13 @@ function bind (socket, payload) {
       // socket.removeListener(CLOSE, onClose);
       listeners.disconnect && listeners.disconnect.call(client);
     };
+    function onError (error) {
+      listeners.error && listeners.error.call(client, error);
+    }
 
     socket.on(DATA, onData);
     socket.on(CLOSE, onClose);
+    socket.on(ERROR, onError);
   } else {
     const response = Handshake.getBadResponse();
 
@@ -73,6 +78,10 @@ function Server (listeners = EMPTY, props = EMPTY) {
 
   this.server.on(CLOSE, function () {
     listeners.close && listeners.close.call(this);
+  });
+
+  this.server.on(ERROR, function (error) {
+    listeners.error && listeners.error.call(this, error);
   });
 }
 
