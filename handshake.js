@@ -21,7 +21,7 @@ const HSTemplate = (
 const BadRequestTemplate = 'HTTP/1.1 400 Bad Request\r\n\r\n';
 
 function getHead (plain) {
-  let rows = plain.split(CONST.CRLF);
+  let rows = plain.split(CRLF);
   const first = HTTP_METHOD_LINE_RE.exec(rows.shift());
   const method = first[1];
   const path = first[2];

@@ -1,14 +1,16 @@
 const Encoder = require('./encoder.js');
 
-function Client (socket, header) {
+function Client (socket, server, header) {
   this.active = true;
   this.socket = socket;
+  this.server = server;
   this.header = header;
 }
-Client.prototype.send = function (data) {
+Client.prototype.send = function (message) {
   if (this.active) {
-    const encodedData = Encoder.encode(data);
-    this.socket.write(encodedData);
+    const data = Encoder.encode(message);
+    this.server.debug('server', data);
+    this.socket.write(data);
   }
 };
 Client.prototype.close = function () {

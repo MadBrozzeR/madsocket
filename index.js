@@ -13,8 +13,10 @@ const DEFAULT_TIMEOUT = 0;
 function bind (socket, payload) {
   const listeners = this.listeners;
   const response = Handshake.getResponse(payload);
+  const server = this;
 
   if (response) {
+    server.debug('server', Buffer.from(response));
     socket.write(response);
 
     if (socket.listenerCount(TIMEOUT)) {
@@ -23,11 +25,12 @@ function bind (socket, payload) {
       socket.setTimeout(this.timeout, socket.end);
     }
 
-    const client = new Client(socket, payload.headers);
+    const client = new Client(socket, server, payload.headers);
 
     listeners.connect && listeners.connect.call(client);
 
     function onData (data) {
+      server.debug('client', data);
       listeners.data && listeners.data.call(client, Encoder.decode(data));
     };
     function onClose () {
@@ -41,7 +44,10 @@ function bind (socket, payload) {
     socket.on(DATA, onData);
     socket.on(CLOSE, onClose);
   } else {
-    socket.end(Handshake.getBadResponse());
+    const response = Handshake.getBadResponse();
+
+    server.debug('server', Buffer.from(response));
+    socket.end(response);
   }
 }
 
@@ -49,10 +55,12 @@ function Server (listeners = EMPTY, props = EMPTY) {
   this.server = new net.Server();
   this.listeners = listeners;
   this.timeout = props.timeout || DEFAULT_TIMEOUT;
+  this.debug = props.debug || function () {};
   const server = this;
 
   function handshake (data) {
-    this.off(DATA, handshake);
+    this.removeListener(DATA, handshake);
+    server.debug('client', data);
 
     const payload = Handshake.getHttpPayload(data);
 
