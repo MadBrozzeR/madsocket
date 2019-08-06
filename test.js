@@ -11,7 +11,7 @@ const page = `
       document.getElementById('chat').appendChild(block);
     }
 
-    var ws = MadSocket('ws://localhost:8080/ws', {
+    var ws = MadSocket('ws://localhost:8090/ws', {
       open: function () {
         console.log('Socket open');
       },
@@ -38,9 +38,6 @@ const page = `
 `;
 
 const ws = new MadSocket({
-  start: function () {
-    console.log('MadSocket started');
-  },
   connect: function () {
     console.log('Client connected');
     this.data = {
@@ -90,4 +87,4 @@ http.createServer(function (request, response) {
   }
 }).on('upgrade', function (message, socket) {
   ws.leach(message, socket);
-}).listen(8080, '0.0.0.0', function () { console.log('I\'m listening') });
+}).listen(8090, '0.0.0.0', function () { console.log('I\'m listening') });

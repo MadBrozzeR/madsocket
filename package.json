@@ -1,6 +1,6 @@
 {
   "name": "madsocket",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Web-Socket server",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,9 @@
   },
   "keywords": [
     "websocket",
-    "socket"
+    "socket",
+    "ws",
+    "server"
   ],
   "author": "MadBrozzeR",
   "license": "ISC",

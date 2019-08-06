@@ -7,13 +7,23 @@ const EMPTY = {};
 const CLOSE = 'close';
 const CONNECTION = 'connection';
 const DATA = 'data';
+const TIMEOUT = 'timeout';
+const DEFAULT_TIMEOUT = 0;
 
-function bind (socket, payload, listeners) {
+function bind (socket, payload) {
+  const listeners = this.listeners;
   const response = Handshake.getResponse(payload);
 
   if (response) {
     socket.write(response);
-    const client = new Client(socket, payload);
+
+    if (socket.listenerCount(TIMEOUT)) {
+      socket.setTimeout(this.timeout);
+    } else {
+      socket.setTimeout(this.timeout, socket.end);
+    }
+
+    const client = new Client(socket, payload.headers);
 
     listeners.connect && listeners.connect.call(client);
 
@@ -22,8 +32,9 @@ function bind (socket, payload, listeners) {
     };
     function onClose () {
       client.active = false;
-      socket.off(DATA, onData);
-      socket.off(CLOSE, onClose);
+      // I'm not sure if I need it
+      // socket.removeListener(DATA, onData);
+      // socket.removeListener(CLOSE, onClose);
       listeners.disconnect && listeners.disconnect.call(client);
     };
 
@@ -34,16 +45,18 @@ function bind (socket, payload, listeners) {
   }
 }
 
-function Server (listeners = EMPTY) {
+function Server (listeners = EMPTY, props = EMPTY) {
   this.server = new net.Server();
   this.listeners = listeners;
+  this.timeout = props.timeout || DEFAULT_TIMEOUT;
+  const server = this;
 
   function handshake (data) {
     this.off(DATA, handshake);
 
     const payload = Handshake.getHttpPayload(data);
 
-    bind(this, payload, listeners);
+    bind.call(server, this, payload);
   }
 
   this.server.on(CONNECTION, function (socket) {
@@ -65,9 +78,8 @@ Server.prototype.close = function () {
 
 Server.prototype.leach = function (message, serverResponse) {
   const socket = serverResponse.socket || serverResponse;
-  socket.setTimeout(125000);
 
-  bind(socket, message, this.listeners);
+  bind.call(this, socket, message);
 };
 
 module.exports = Server;
