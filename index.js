@@ -21,12 +21,6 @@ function bind (socket, payload) {
     server.debug('server', Buffer.from(response));
     socket.write(response);
 
-    if (socket.listenerCount(TIMEOUT)) {
-      socket.setTimeout(this.timeout);
-    } else {
-      socket.setTimeout(this.timeout, socket.end);
-    }
-
     const client = new Client(socket, server, payload.headers);
 
     listeners.connect && listeners.connect.call(client);
@@ -37,11 +31,10 @@ function bind (socket, payload) {
       const frame = Encoder.decode(data);
 
       if (!proceedCommandFrame(frame, client)) {
-        listeners.data && listeners.data.call(client, frame.data);
+        listeners.message && listeners.message.call(client, frame.data);
       }
     };
     function onClose () {
-      client.active = false;
       // I'm not sure if I need it
       // socket.removeListener(DATA, onData);
       // socket.removeListener(CLOSE, onClose);
@@ -50,10 +43,15 @@ function bind (socket, payload) {
     function onError (error) {
       listeners.error && listeners.error.call(client, error);
     }
+    function onTimeout () {
+      client.close(1001, 'Timeout');
+    }
 
     socket.on(DATA, onData);
     socket.on(CLOSE, onClose);
     socket.on(ERROR, onError);
+    socket.removeAllListeners(TIMEOUT);
+    socket.setTimeout(this.timeout, onTimeout);
   } else {
     const response = Handshake.getBadResponse();
 

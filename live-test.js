@@ -17,8 +17,8 @@ const page = `
           open: function () {
             toChat('Connected', 'gray');
           },
-          close: function () {
-            toChat('Disconnected', 'gray');
+          close: function (event) {
+            toChat('Disconnected (code: ' + event.code + ')', 'gray');
           },
           message: function (message) {
             toChat('Server: ' + message);
@@ -96,16 +96,16 @@ const ws = new MadSocket({
     const index = clients.indexOf(this);
     clients.splice(index, 1);
   },
-  data: function (data) {
-    console.log('Client wrote: ', data);
-    if (data.toString() === 'quit') {
+  message: function (message) {
+    console.log('Client wrote: ', message.toString());
+    if (message.toString() === 'quit') {
       this.close(1000);
     } else if (clients.length === 1) {
-      this.send(data.toString().split('').reverse().join(''));
+      this.send(message.toString().split('').reverse().join(''));
     } else {
       for (let index = 0 ; index < clients.length ; ++index) {
         if (clients[index] !== this) {
-          clients[index].send(data);
+          clients[index].send(message);
         }
       }
     }

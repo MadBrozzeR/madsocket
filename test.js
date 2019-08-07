@@ -1,6 +1,7 @@
 const net = require('net');
 const MadSocket = require('./index.js');
 
+const TOTAL_TEST_COUNT = 7;
 let counter = 0;
 
 function test (description, assertion, expected) {
@@ -41,6 +42,9 @@ const queue = [
   },
   function (data) {
     test('Correct response received', data.toString('hex'), '8103647361');
+  },
+  function (data) {
+    test('Server should send close code', data.toString('hex'), '880903e954696d656f7574')
   }
 ];
 queue.cursor = 0;
@@ -53,13 +57,13 @@ const ws = new MadSocket({
   },
   close: function () {
     test('Server closed', true, true);
-    test('All tests should be triggered', counter, 6);
+    test('All tests should be triggered', counter, TOTAL_TEST_COUNT);
   },
 
   connect: function () {
     test('Client connected', true, true);
   },
-  data: function (data) {
+  message: function (data) {
     this.send(data.toString().split('').reverse().join(''));
   },
   disconnect: function () {

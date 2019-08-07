@@ -12,9 +12,9 @@ const ws = new MadSocket(<listeners>, <props>);
 
 Initialization of WebSocket instance. Yet it does nothing more than just exists and store its configuration.
 
-*listeners* - optional. Set of websocket event listeners.
+*listeners* - Optional. Set of websocket event listeners.
 
-*props* - optional. Server settings.
+*props* - Optional. Server settings.
 
 ### props
 
@@ -46,7 +46,7 @@ First argument for constructor function. There we should describe all valuable a
 
   connect: function () {},      // Client connected to server.
   disconnect: function () {},   // Client disconnected from server.
-  data: function (message) {}   // Client sent message
+  message: function (message) {}   // Client sent message
 }
 ```
 
@@ -56,8 +56,8 @@ First two listeners are server related. They get no arguments, but has MadSocket
 
 `error` events can be emitted by either MadSocket of Client instances. Error itself is being passed as an argument.
 
-All other listeners are Client relative. They all get Client instance as a context (`this`), and only `data` listener
-receives actual message as function argument.
+All other listeners are Client relative. They all get Client instance as a context (`this`),
+and only `message` listener receives actual message as function argument.
 
 ### ws.listen
 
@@ -70,7 +70,7 @@ Start websocket server for income connections. `listeners.start` will be emitted
 ### ws.close
 
 ```
-ws.listen();
+ws.close();
 ```
 
 Stop server from listening to new connections. `listeners.close` will be emitted after server is stopped.
@@ -106,7 +106,7 @@ In this case MadSocket server itself is never being started, so `start` and `clo
 
 ## Client instance
 
-When any Client relative event (connect, disconnect, data) occures, corresponding listener is being called with
+When any Client relative event (connect, disconnect, message) occures, corresponding listener is being called with
 Client instance as a context. So you can use `this` keyword to gain access to this instance and its methods.
 
 ### client.send
@@ -120,10 +120,16 @@ Send message to this client.
 ### client.close
 
 ```
-client.close();
+client.close(status = 1000, reason = '');
 ```
 
 Disconnect client from WebSocket server.
+
+*status* - Close status code. By default is 1000 (Normal closure).
+(This documentation section)[https://tools.ietf.org/html/rfc6455#section-7.4.1] can be used as a reference.
+
+*reason* - Optional closing reason. According to documentation, it doesn't have to be human-readable,
+as it's mainly for debug purposes. But still, client receives it and can read.
 
 ## Live chat example
 
