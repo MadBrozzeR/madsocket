@@ -54,7 +54,7 @@ All listeners are optional, and you can ommit any listener that you are not inte
 
 First two listeners are server related. They get no arguments, but has MadSocket instance as a context (`this`).
 
-`error` events can be emitted by either MadSocket of Client instances. Error itself is being passed as an argument.
+`error` events can be emitted by either MadSocket or Client instances. Error itself is being passed as an argument.
 
 All other listeners are Client relative. They all get Client instance as a context (`this`),
 and only `message` listener receives actual message as function argument.
@@ -126,7 +126,7 @@ client.close(status = 1000, reason = '');
 Disconnect client from WebSocket server.
 
 *status* - Close status code. By default is 1000 (Normal closure).
-(This documentation section)[https://tools.ietf.org/html/rfc6455#section-7.4.1] can be used as a reference.
+[This documentation section](https://tools.ietf.org/html/rfc6455#section-7.4.1) can be used as a reference.
 
 *reason* - Optional closing reason. According to documentation, it doesn't have to be human-readable,
 as it's mainly for debug purposes. But still, client receives it and can read.

@@ -1,4 +1,5 @@
 const Encoder = require('./encoder.js');
+const utils = require('./utils.js');
 
 const TYPE = Encoder.TYPE;
 
@@ -12,7 +13,7 @@ function proceedCommandFrame (frame, client) {
 
   if (frame.type === TYPE.PING) {
     const data = Encoder.encode(frame.data, TYPE.PONG);
-    client.socket.write(data);
+    utils.socketWrite(client.socket, data);
 
     return true;
   }

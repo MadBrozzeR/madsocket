@@ -1,7 +1,7 @@
 {
   "name": "madsocket",
-  "version": "1.0.2",
-  "description": "Web-Socket server",
+  "version": "1.0.3",
+  "description": "WebSocket server",
   "main": "index.js",
   "scripts": {
     "test": "node test.js"

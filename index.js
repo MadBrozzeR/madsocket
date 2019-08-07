@@ -3,6 +3,7 @@ const Encoder = require('./encoder.js');
 const Handshake = require('./handshake.js');
 const Client = require('./client.js');
 const proceedCommandFrame = require('./command-frames.js');
+const utils = require('./utils.js');
 
 const EMPTY = {};
 const CLOSE = 'close';
@@ -12,6 +13,14 @@ const TIMEOUT = 'timeout';
 const ERROR = 'error';
 const DEFAULT_TIMEOUT = 0;
 
+const TIMEOUT_MESSAGE = Encoder.encode(Buffer.from('03e954696d656f7574', 'hex'), Encoder.TYPE.CLOSE);
+
+function onTimeout () {
+  utils.socketEnd(this, TIMEOUT_MESSAGE);
+};
+
+function noop () {};
+
 function bind (socket, payload) {
   const listeners = this.listeners;
   const response = Handshake.getResponse(payload);
@@ -19,7 +28,7 @@ function bind (socket, payload) {
 
   if (response) {
     server.debug('server', Buffer.from(response));
-    socket.write(response);
+    utils.socketWrite(socket, response);
 
     const client = new Client(socket, server, payload.headers);
 
@@ -35,16 +44,10 @@ function bind (socket, payload) {
       }
     };
     function onClose () {
-      // I'm not sure if I need it
-      // socket.removeListener(DATA, onData);
-      // socket.removeListener(CLOSE, onClose);
       listeners.disconnect && listeners.disconnect.call(client);
     };
     function onError (error) {
       listeners.error && listeners.error.call(client, error);
-    }
-    function onTimeout () {
-      client.close(1001, 'Timeout');
     }
 
     socket.on(DATA, onData);
@@ -64,7 +67,7 @@ function Server (listeners = EMPTY, props = EMPTY) {
   this.server = new net.Server();
   this.listeners = listeners;
   this.timeout = props.timeout || DEFAULT_TIMEOUT;
-  this.debug = props.debug || function () {};
+  this.debug = props.debug || noop;
   const server = this;
 
   function handshake (data) {
@@ -91,16 +94,22 @@ function Server (listeners = EMPTY, props = EMPTY) {
 
 Server.prototype.listen = function (port = 80, host = '0.0.0.0') {
   this.server.listen(port, host, this.listeners.start);
+
+  return this;
 };
 
 Server.prototype.close = function () {
   this.server.close();
+
+  return this;
 };
 
 Server.prototype.leach = function (message, serverResponse) {
   const socket = serverResponse.socket || serverResponse;
 
   bind.call(this, socket, message);
+
+  return this;
 };
 
 module.exports = Server;
