@@ -8,7 +8,7 @@ type Listeners = {
 
   connect?: (this: Client) => void;
   disconnect?: (this: Client) => void;
-  message?: (this: Client, message: string) => void;
+  message?: (this: Client, message: Buffer) => void;
 };
 
 type Props = {
@@ -28,6 +28,7 @@ export class MadSocket {
 }
 
 export class Client {
+  request: IncomingMessage;
   send(message: string);
   close(status?: number, reason?: string);
 }

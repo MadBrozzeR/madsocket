@@ -1,9 +1,10 @@
 const Encoder = require('./encoder.js');
 
-function Client (socket, server, header) {
+function Client (socket, server, request) {
   this.socket = socket;
   this.server = server;
-  this.header = header;
+  this.request = request;
+  this.header = request.headers;
 }
 Client.prototype.send = function (message) {
   if (this.socket.writable) {

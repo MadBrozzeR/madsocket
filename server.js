@@ -21,16 +21,16 @@ function onTimeout () {
 
 function noop () {};
 
-function bind (socket, payload) {
+function bind (socket, request) {
   const listeners = this.listeners;
-  const response = Handshake.getResponse(payload);
+  const response = Handshake.getResponse(request);
   const server = this;
 
   if (response) {
     server.debug('server', Buffer.from(response));
     utils.socketWrite(socket, response);
 
-    const client = new Client(socket, server, payload.headers);
+    const client = new Client(socket, server, request);
 
     listeners.connect && listeners.connect.call(client);
 
