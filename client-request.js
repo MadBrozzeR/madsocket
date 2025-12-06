@@ -1,19 +1,19 @@
 const Encoder = require('./encoder.js');
 
-function Client (socket, server, request) {
+function ClientRequest (socket, server, request) {
   this.socket = socket;
   this.server = server;
   this.request = request;
   this.header = request.headers;
 }
-Client.prototype.send = function (message) {
+ClientRequest.prototype.send = function (message) {
   if (this.socket.writable) {
     const data = Encoder.encode(message);
     this.server.debug('server', data);
     this.socket.write(data);
   }
 };
-Client.prototype.close = function (status = 1000, reason = '') {
+ClientRequest.prototype.close = function (status = 1000, reason = '') {
   if (!this.socket.writable) {
     return;
   }
@@ -33,4 +33,4 @@ Client.prototype.close = function (status = 1000, reason = '') {
   this.socket.end(data);
 };
 
-module.exports = Client;
+module.exports = ClientRequest;

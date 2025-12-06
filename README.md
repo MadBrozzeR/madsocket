@@ -54,9 +54,9 @@ All listeners are optional, and you can ommit any listener that you are not inte
 
 First two listeners are server related. They get no arguments, but has MadSocket instance as a context (`this`).
 
-`error` events can be emitted by either MadSocket or Client instances. Error itself is being passed as an argument.
+`error` events can be emitted by either MadSocket or ClientRequest instances. Error itself is being passed as an argument.
 
-All other listeners are Client relative. They all get Client instance as a context (`this`),
+All other listeners are ClientRequest relative. They all get ClientRequest instance as a context (`this`),
 and only `message` listener receives actual message as function argument.
 
 ### ws.listen
@@ -75,28 +75,28 @@ ws.close();
 
 Stop server from listening to new connections. `listeners.close` will be emitted after server is stopped.
 
-### ws.leach
+### ws.leech
 
 ```
-ws.leach(request, response);
+ws.leech(request, response);
 ```
 
 Sometimes (or for me it's always) you already have your webserver listening to the same port as you want for
 WebSocket to listen to. In such cases you can setup your web server to pass connections into MadSocket instance.
 
 ```
-// For NodeJS v10+ you can use ws.leach right inside of server's `connection` event listener.
+// For NodeJS v10+ you can use ws.leech right inside of server's `connection` event listener.
 const server = http.crateServer((request, response) => {
   if (request.url === '/ws') {
-    ws.leach(request, response);
+    ws.leech(request, response);
   }
 }).listen(80);
 
 // For older versions compatibility (less then NodeJS v10) you have to attach listener to `upgrade` server event.
-// Otherwise socket will be automatically destroyed. With this approach you don't need to place ws.leach inside
+// Otherwise socket will be automatically destroyed. With this approach you don't need to place ws.leech inside
 // 'connection' listener, otherwise unexpected behavior may be encountered.
 server.on('upgrade', (request, socket) => {
-  ws.leach(request, socket);
+  ws.leech(request, socket);
 });
 ```
 
@@ -104,10 +104,10 @@ Given example should be enough for sharing single connection port between WebSoc
 
 In this case MadSocket server itself is never being started, so `start` and `close` events will never be triggered.
 
-## Client instance
+## ClientRequest instance
 
-When any Client relative event (connect, disconnect, message) occures, corresponding listener is being called with
-Client instance as a context. So you can use `this` keyword to gain access to this instance and its methods.
+When any ClientRequest relative event (connect, disconnect, message) occures, corresponding listener is being called with
+ClientRequest instance as a context. So you can use `this` keyword to gain access to this instance and its methods.
 
 ### client.send
 

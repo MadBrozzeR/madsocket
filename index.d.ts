@@ -4,11 +4,11 @@ type Listeners = {
   start?: (this: MadSocket) => void;
   close?: (this: MadSocket) => void;
 
-  error?: (this: MadSocket | Client, error: any) => void;
+  error?: (this: MadSocket | ClientRequest, error: any) => void;
 
-  connect?: (this: Client) => void;
-  disconnect?: (this: Client) => void;
-  message?: (this: Client, message: Buffer) => void;
+  connect?: (this: ClientRequest) => void;
+  disconnect?: (this: ClientRequest) => void;
+  message?: (this: ClientRequest, message: Buffer) => void;
 };
 
 type Props = {
@@ -27,7 +27,7 @@ export class MadSocket {
   leech(request: IncomingMessage, response: ServerResponse<IncomingMessage>);
 }
 
-export class Client {
+export class ClientRequest {
   request: IncomingMessage;
   send(message: string);
   close(status?: number, reason?: string);

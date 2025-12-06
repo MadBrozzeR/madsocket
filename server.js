@@ -1,11 +1,10 @@
 const net = require('net');
 const Encoder = require('./encoder.js');
 const Handshake = require('./handshake.js');
-const Client = require('./client.js');
+const ClientRequest = require('./client-request.js');
 const proceedCommandFrame = require('./command-frames.js');
 const utils = require('./utils.js');
 
-const EMPTY = {};
 const CLOSE = 'close';
 const CONNECTION = 'connection';
 const DATA = 'data';
@@ -30,7 +29,7 @@ function bind (socket, request) {
     server.debug('server', Buffer.from(response));
     utils.socketWrite(socket, response);
 
-    const client = new Client(socket, server, request);
+    const client = new ClientRequest(socket, server, request);
 
     listeners.connect && listeners.connect.call(client);
 
@@ -63,7 +62,7 @@ function bind (socket, request) {
   }
 }
 
-function Server (listeners = EMPTY, props = EMPTY) {
+function Server (listeners = {}, props = {}) {
   this.server = new net.Server();
   this.listeners = listeners;
   this.timeout = props.timeout || DEFAULT_TIMEOUT;
