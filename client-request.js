@@ -6,9 +6,9 @@ function ClientRequest (socket, server, request) {
   this.request = request;
   this.header = request.headers;
 }
-ClientRequest.prototype.send = function (message) {
+ClientRequest.prototype.send = function (message, params) {
   if (this.socket.writable) {
-    const data = Encoder.encode(message);
+    const data = Encoder.encode(message, params);
     this.server.debug('server', data);
     this.socket.write(data);
   }
@@ -28,7 +28,7 @@ ClientRequest.prototype.close = function (status = 1000, reason = '') {
   if (reason) {
     buffer.write(reason, 2);
   }
-  const data = Encoder.encode(buffer, Encoder.TYPE.CLOSE);
+  const data = Encoder.encode(buffer, { opcode: Encoder.TYPE.CLOSE });
   this.server.debug('server', data);
   this.socket.end(data);
 };

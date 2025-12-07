@@ -1,6 +1,6 @@
 const http = require('http');
 const fs = require('fs');
-const MadSocket = require('./index.js');
+const { MadSocket } = require('./index.js');
 
 const page = `
   <html>
@@ -151,5 +151,5 @@ http.createServer(function (request, response) {
     //  break;
   }
 }).on('upgrade', function (message, socket) {
-  ws.leach(message, socket);
+  ws.leech(message, socket);
 }).listen(8090, '0.0.0.0', function () { console.log('I\'m listening') });

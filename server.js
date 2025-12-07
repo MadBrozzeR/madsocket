@@ -12,7 +12,7 @@ const TIMEOUT = 'timeout';
 const ERROR = 'error';
 const DEFAULT_TIMEOUT = 0;
 
-const TIMEOUT_MESSAGE = Encoder.encode(Buffer.from('03e954696d656f7574', 'hex'), Encoder.TYPE.CLOSE);
+const TIMEOUT_MESSAGE = Encoder.encode(Buffer.from('03e954696d656f7574', 'hex'), { opcode: Encoder.TYPE.CLOSE });
 
 function onTimeout () {
   utils.socketEnd(this, TIMEOUT_MESSAGE);
@@ -39,7 +39,7 @@ function bind (socket, request) {
       const frame = Encoder.decode(data);
 
       if (!proceedCommandFrame(frame, client)) {
-        listeners.message && listeners.message.call(client, frame.data);
+        listeners.message && listeners.message.call(client, frame.data, { fin: frame.fin, opcode: frame.opcode });
       }
     };
     function onClose () {

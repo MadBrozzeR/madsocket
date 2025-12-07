@@ -1,4 +1,11 @@
-import { IncomingMessage, ServerResponse } from 'http';
+import type { IncomingMessage, ServerResponse } from 'http';
+import net from 'net';
+import { OPCODE } from './constants';
+
+type MessageParams = {
+  fin: boolean;
+  opcode: (typeof OPCODE)[keyof typeof OPCODE];
+};
 
 type Listeners = {
   start?: (this: MadSocket) => void;
@@ -8,7 +15,7 @@ type Listeners = {
 
   connect?: (this: ClientRequest) => void;
   disconnect?: (this: ClientRequest) => void;
-  message?: (this: ClientRequest, message: Buffer) => void;
+  message?: (this: ClientRequest, message: Buffer, params: MessageParams) => void;
 };
 
 type Props = {
@@ -29,6 +36,29 @@ export class MadSocket {
 
 export class ClientRequest {
   request: IncomingMessage;
-  send(message: string);
+  send(message: string, params?: MessageParams);
   close(status?: number, reason?: string);
+}
+
+type ClientListeners = {
+  error?: (this: Client, error: any) => void;
+  message?: (this: Client, message: Buffer, params: MessageParams) => void;
+  connect?: (this: Client) => void;
+  disconnect?: (this: Client) => void;
+};
+
+export class Client {
+  url: string;
+  listeners: ClientListeners;
+  socket: net.Socket | null;
+  status: 'init' | 'handshake' | 'active' | 'error' | 'closed';
+  key: string;
+
+  static connect(url: string): Client;
+
+  constructor();
+  on(listeners: ClientListeners): this;
+  connect(url?: string): this;
+  close(): void;
+  send(data: string | Buffer, params?: MessageParams): void;
 }

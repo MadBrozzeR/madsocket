@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 const HTTP_METHOD_LINE_RE = /^(?:(\w+) ([^ ]+) )?HTTP\/([^\s]+)(?: (\d{3}) (.+))?$/;
-const COLON_SPACE = ': ';
+const COLON = ':';
 const EMPTY_LINE = '\r\n\r\n';
 const WSKEY = 'sec-websocket-key';
 const WEBSOCKET = 'websocket';
@@ -11,6 +11,7 @@ const MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const REPLACE_KEY = '${key}';
 const CRLF = '\r\n';
 
+// TODO move to templates
 const HSTemplate = (
   'HTTP/1.1 101 Switching Protocols\r\n' +
   'Upgrade: websocket\r\n' +
@@ -18,6 +19,7 @@ const HSTemplate = (
   'Sec-WebSocket-Accept: ${key}\r\n\r\n'
 );
 
+// TODO move to templates
 const BadRequestTemplate = 'HTTP/1.1 400 Bad Request\r\n\r\n';
 
 function getHead (plain) {
@@ -32,8 +34,8 @@ function getHead (plain) {
   let splitted;
   let headers = {};
   for (let index in rows) {
-    splitted = rows[index].split(COLON_SPACE);
-    headers[splitted[0].toLowerCase()] = splitted[1];
+    splitted = rows[index].split(COLON);
+    headers[splitted[0].toLowerCase()] = splitted[1].trim();
   }
 
   return {method, path, version, status, message, headers};
@@ -76,8 +78,28 @@ function getBadResponse () {
   return BadRequestTemplate;
 }
 
+function validateServerHandshake (response, key) {
+  const httpPayload = getHttpPayload(response);
+  const acceptHeader = httpPayload.headers['sec-websocket-accept'];
+  const result = {
+    success: true,
+    errorMessage: '',
+  };
+
+  if (httpPayload.status !== '101') {
+    result.success = false;
+    result.errorMessage = 'Server returned status ' + httpPayload.status;
+  } else if (!acceptHeader || acceptHeader !== getAccept(key)) {
+    result.success = false;
+    result.errorMessage = 'Accept header missmatch';
+  }
+
+  return result;
+}
+
 module.exports = {
   getResponse: getResponse,
   getHttpPayload: getHttpPayload,
-  getBadResponse: getBadResponse
+  getBadResponse: getBadResponse,
+  validateServerHandshake: validateServerHandshake,
 };
