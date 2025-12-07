@@ -14,7 +14,7 @@ function bind (client, socket) {
   const listeners = client.listeners;
 
   socket.on('data', function (data) {
-    // console.log(client.status, data.toString());
+    client.debug.call(client, 'server', data);
 
     switch (client.status) {
       case 'handshake':
@@ -26,7 +26,7 @@ function bind (client, socket) {
         } else {
           listeners.error && client.listeners.error.call(client, new Error(result.errorMessage));
           client.status = 'error';
-          client.close();
+          // client.close();
         }
         break;
       case 'active':
@@ -39,26 +39,29 @@ function bind (client, socket) {
   });
 
   socket.on('close', function () {
+    client.debug.call(client, 'close');
     listeners.disconnect && listeners.disconnect.call(client);
-    client.close();
+    client.status = 'closed';
+    // client.close();
   });
 
   socket.on('error', function (error) {
+    client.debug.call(client, 'error', error);
     listeners.error && listeners.error.call(client, error);
     client.status = 'error';
-    client.close();
+    // client.close();
   });
 
   return client;
 }
 
-function Client () {
-  // error, message, connect, disconnect
-  this.url = '';
-  this.listeners = {};
+function Client (listeners = {}, params = {}) {
+  this.url = params.url || '';
+  this.listeners = listeners; // error, message, connect, disconnect
   this.socket = null;
   this.status = 'init'; // init | handshake | active | error | closed
   this.key = '';
+  this.debug = params.debug || function () {};
 };
 
 Client.prototype.on = function (listeners) {
@@ -70,6 +73,8 @@ Client.prototype.on = function (listeners) {
 }
 
 Client.prototype.connect = function (url) {
+  const client = this;
+
   if (url) {
     this.url = url;
   }
@@ -93,6 +98,7 @@ Client.prototype.connect = function (url) {
   const key = generateClientKey();
 
   const socket = (isSecure ? tls : net).connect(port, host, options, function () {
+    client.debug.call(client, 'connected');
     const handshake = useTemplate(CLIENT_HANDSHAKE_TEMPLATE, { host, path, key });
     socket.write(handshake);
   });
@@ -117,13 +123,13 @@ Client.prototype.send = function (message, params) {
   if (this.socket.writable) {
     const mask = generateMask();
     const data = Encoder.encode(message, { opcode: params.opcode, fin: params.fin, mask: mask });
-    // this.server.debug('server', data);
+    this.debug.call(this, 'client', data);
     this.socket.write(data);
   }
 }
 
-Client.connect = function (url) {
-  return new Client().connect(url);
+Client.connect = function (url, listeners) {
+  return new Client(listeners).connect(url);
 }
 
 module.exports = Client;

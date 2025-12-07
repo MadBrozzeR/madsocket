@@ -36,7 +36,7 @@ export class MadSocket {
 
 export class ClientRequest {
   request: IncomingMessage;
-  send(message: string, params?: MessageParams);
+  send(message: string, params?: Partial<MessageParams>);
   close(status?: number, reason?: string);
 }
 
@@ -47,6 +47,11 @@ type ClientListeners = {
   disconnect?: (this: Client) => void;
 };
 
+type ClientParams = {
+  url?: string;
+  debug?: (this: Client, type: string, data?: any) => void;
+};
+
 export class Client {
   url: string;
   listeners: ClientListeners;
@@ -54,11 +59,11 @@ export class Client {
   status: 'init' | 'handshake' | 'active' | 'error' | 'closed';
   key: string;
 
-  static connect(url: string): Client;
+  static connect(url: string, listeners?: ClientListeners): Client;
 
-  constructor();
+  constructor(listeners?: ClientListeners, params: ClientParams);
   on(listeners: ClientListeners): this;
   connect(url?: string): this;
   close(): void;
-  send(data: string | Buffer, params?: MessageParams): void;
+  send(data: string | Buffer, params?: Partial<MessageParams>): void;
 }
