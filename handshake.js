@@ -1,4 +1,6 @@
 const crypto = require('crypto');
+const { BAD_REQUEST_TEMPLATE, SERVER_HANDSHAKE_TEMPLATE } = require('./templates.js');
+const { useTemplate } = require('./utils.js');
 
 const HTTP_METHOD_LINE_RE = /^(?:(\w+) ([^ ]+) )?HTTP\/([^\s]+)(?: (\d{3}) (.+))?$/;
 const COLON = ':';
@@ -8,19 +10,7 @@ const WEBSOCKET = 'websocket';
 const BASE64 = 'base64';
 const SHA1 = 'sha1';
 const MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
-const REPLACE_KEY = '${key}';
 const CRLF = '\r\n';
-
-// TODO move to templates
-const HSTemplate = (
-  'HTTP/1.1 101 Switching Protocols\r\n' +
-  'Upgrade: websocket\r\n' +
-  'Connection: Upgrade\r\n' +
-  'Sec-WebSocket-Accept: ${key}\r\n\r\n'
-);
-
-// TODO move to templates
-const BadRequestTemplate = 'HTTP/1.1 400 Bad Request\r\n\r\n';
 
 function getHead (plain) {
   let rows = plain.split(CRLF);
@@ -66,7 +56,7 @@ function getResponse (payload) {
   let response;
 
   if (payload && payload.headers[WSKEY] && payload.headers.upgrade === WEBSOCKET) {
-    response = HSTemplate.replace(REPLACE_KEY, getAccept(payload.headers[WSKEY]));
+    response = useTemplate(SERVER_HANDSHAKE_TEMPLATE, { key: getAccept(payload.headers[WSKEY]) });
   } else {
     response = '';
   }
@@ -75,7 +65,7 @@ function getResponse (payload) {
 }
 
 function getBadResponse () {
-  return BadRequestTemplate;
+  return BAD_REQUEST_TEMPLATE;
 }
 
 function validateServerHandshake (response, key) {
