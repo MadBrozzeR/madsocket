@@ -12,8 +12,7 @@ function proceedCommandFrame (frame, client) {
   }
 
   if (frame.type === TYPE.PING) {
-    const data = Encoder.encode(frame.data, { opcode: TYPE.PONG });
-    utils.socketWrite(client.socket, data);
+    client.send(frame.data, { opcode: TYPE.PONG });
 
     return true;
   }
