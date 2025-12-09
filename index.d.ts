@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import net from 'net';
+import { Socket } from 'net';
 import { OPCODE } from './constants';
 
 type MessageParams = {
@@ -41,27 +41,27 @@ export class ClientRequest {
 }
 
 type ClientListeners = {
-  error?: (this: Client, error: any) => void;
-  message?: (this: Client, message: Buffer, params: MessageParams) => void;
-  connect?: (this: Client) => void;
-  disconnect?: (this: Client) => void;
+  error?: (this: MadSocketClient, error: any) => void;
+  message?: (this: MadSocketClient, message: Buffer, params: MessageParams) => void;
+  connect?: (this: MadSocketClient) => void;
+  disconnect?: (this: MadSocketClient) => void;
 };
 
 type ClientParams = {
   url?: string;
-  debug?: (this: Client, type: string, data?: any) => void;
+  debug?: (this: MadSocketClient, type: string, data?: any) => void;
 };
 
-export class Client {
+export class MadSocketClient {
   url: string;
   listeners: ClientListeners;
-  socket: net.Socket | null;
+  socket: Socket | null;
   status: 'init' | 'handshake' | 'active' | 'error' | 'closed';
   key: string;
 
-  static connect(url: string, listeners?: ClientListeners): Client;
+  static connect(url: string, listeners?: ClientListeners): MadSocketClient;
 
-  constructor(listeners?: ClientListeners, params: ClientParams);
+  constructor(listeners?: ClientListeners, params?: ClientParams);
   on(listeners: ClientListeners): this;
   connect(url?: string): this;
   close(): void;

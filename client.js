@@ -111,7 +111,10 @@ Client.prototype.connect = function (url) {
 
 Client.prototype.close = function () {
   if (this.socket.writable) {
+    this.debug.call(this, 'end', true);
     this.socket.end();
+  } else {
+    this.debug.call(this, 'warning', 'end:not-writable');
   }
 
   if (this.status === 'active') {
@@ -125,6 +128,8 @@ Client.prototype.send = function (message, params) {
     const data = Encoder.encode(message, { opcode: params.opcode, fin: params.fin, mask: mask });
     this.debug.call(this, 'client', data);
     this.socket.write(data);
+  } else {
+    this.debug.call(this, 'warning', 'client:not-writable');
   }
 }
 
