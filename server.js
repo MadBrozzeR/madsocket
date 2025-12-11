@@ -26,10 +26,8 @@ function bind (socket, request) {
   const server = this;
 
   if (response) {
-    server.debug('server', Buffer.from(response));
-    utils.socketWrite(socket, response);
-
     const client = new ClientRequest(socket, server, request);
+    client.write(Buffer.from(response));
 
     listeners.connect && listeners.connect.call(client);
 

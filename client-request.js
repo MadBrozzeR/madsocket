@@ -7,10 +7,14 @@ function ClientRequest (socket, server, request) {
   this.header = request.headers;
 }
 ClientRequest.prototype.send = function (message, params) {
+  this.write(Encoder.encode(message, params));
+};
+ClientRequest.prototype.write = function (data) {
   if (this.socket.writable) {
-    const data = Encoder.encode(message, params);
     this.server.debug('server', data);
     this.socket.write(data);
+  } else {
+    this.server.debug('server', 'not-writable');
   }
 };
 ClientRequest.prototype.close = function (status = 1000, reason = '') {

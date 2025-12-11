@@ -100,7 +100,7 @@ Client.prototype.connect = function (url) {
   const socket = (isSecure ? tls : net).connect(port, host, options, function () {
     client.debug.call(client, 'connected');
     const handshake = useTemplate(CLIENT_HANDSHAKE_TEMPLATE, { host, path, key });
-    socket.write(handshake);
+    client.write(Buffer.from(handshake));
   });
 
   bind(this, socket);
@@ -123,9 +123,13 @@ Client.prototype.close = function () {
 }
 
 Client.prototype.send = function (message, params) {
-  if (this.socket.writable) {
     const mask = generateMask();
     const data = Encoder.encode(message, { opcode: params.opcode, fin: params.fin, mask: mask });
+    this.write(data);
+}
+
+Client.prototype.write = function (data) {
+  if (this.socket.writable) {
     this.debug.call(this, 'client', data);
     this.socket.write(data);
   } else {
