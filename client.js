@@ -89,6 +89,10 @@ Client.prototype.connect = function (url) {
     this.url = url;
   }
 
+  if (this.socket) {
+    this.socket.removeAllListeners();
+  }
+
   const urlRegMatch = this.url ? URL_RE.exec(this.url) : null;
 
   if (!urlRegMatch) {
