@@ -5,6 +5,7 @@ const { CLIENT_HANDSHAKE_TEMPLATE } = require('./templates.js');
 const Handshake = require('./handshake.js');
 const Encoder = require('./encoder.js');
 const proceedCommandFrame = require('./command-frames.js');
+const { Collector } = require('./collector.js');
 
 const URL_RE = /(ws|wss):\/\/([^\/:]+)(:\d+)?(\/.*)?/
 
@@ -24,31 +25,29 @@ function bind (client, socket) {
           client.status = 'active';
           listeners.connect && client.listeners.connect.call(client);
         } else {
-          listeners.error && client.listeners.error.call(client, new Error(result.errorMessage));
           client.status = 'error';
+          listeners.error && client.listeners.error.call(client, new Error(result.errorMessage));
           // client.close();
         }
         break;
       case 'active':
-        const frame = Encoder.decode(data);
-
-        if (!proceedCommandFrame(frame, client)) {
-          listeners.message && listeners.message.call(client, frame.data);
-        }
+        client.data.push(data);
+        break;
     }
   });
 
   socket.on('close', function () {
     client.debug.call(client, 'close');
-    listeners.disconnect && listeners.disconnect.call(client);
     client.status = 'closed';
+    socket.removeAllListeners();
+    listeners.disconnect && listeners.disconnect.call(client);
     // client.close();
   });
 
   socket.on('error', function (error) {
     client.debug.call(client, 'error', error);
-    listeners.error && listeners.error.call(client, error);
     client.status = 'error';
+    listeners.error && listeners.error.call(client, error);
     // client.close();
   });
 
@@ -56,12 +55,23 @@ function bind (client, socket) {
 }
 
 function Client (listeners = {}, params = {}) {
+  const client = this;
   this.url = params.url || '';
   this.listeners = listeners; // error, message, connect, disconnect
   this.socket = null;
   this.status = 'init'; // init | handshake | active | error | closed
   this.key = '';
   this.debug = params.debug || function () {};
+  this.data = new Collector(Encoder.COLLECTOR_STEPS, function (info) {
+    const frame = {
+      type: info.flags.opcode,
+      fin: info.flags.fin ? true : false,
+      data: info.data,
+    };
+    if (!proceedCommandFrame(frame, client)) {
+      listeners.message && listeners.message.call(client, frame.data, { fin: frame.fin, opcode: frame.opcode });
+    }
+  });
 };
 
 Client.prototype.on = function (listeners) {

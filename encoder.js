@@ -14,6 +14,59 @@ const BIT = {
   LENGTH: 0x7F,
 };
 
+const COLLECTOR_STEPS = [
+  {
+    id: 'flags',
+    length: 2,
+    callback: function (data) {
+      const flags = data.readUInt8(0);
+      const lenFlags = data.readUInt8(1);
+      const length = 0x7f & lenFlags;
+
+      return {
+        fin: 0x80 & flags,
+        opcode: 0xf & flags,
+        mask: 0x80 & lenFlags ? 4 : 0,
+        lengthBytes: length === 126
+          ? 2
+          : length === 127
+            ? 8
+            : 0,
+
+        length: 0x7f & lenFlags,
+      };
+    }
+  },
+  {
+    id: 'length',
+    length: ({ flags }) => flags.lengthBytes,
+    callback: function (data, { flags }) {
+      switch (data.length) {
+        case 2:
+          return data.readUInt16BE();
+        case 8:
+          return parseInt(data.readBigUInt64BE(), 10);
+        default:
+          return flags.length;
+      }
+    },
+  },
+  {
+    id: 'mask',
+    length: ({ flags }) => flags.mask,
+    callback: function (data) {
+      return data.length ? data : null;
+    },
+  },
+  {
+    id: 'data',
+    length: ({ length }) => length,
+    callback: function (data, { mask }) {
+      return mask ? applyMask(data) : data;
+    },
+  }
+];
+
 function decode (data) {
   const reader = new Reader(data);
   const flags = reader.readUIntBE();
@@ -84,5 +137,6 @@ function encode (data, params = {}) {
 module.exports = {
   encode: encode,
   decode: decode,
-  TYPE: TYPE
+  TYPE: TYPE,
+  COLLECTOR_STEPS: COLLECTOR_STEPS,
 };
