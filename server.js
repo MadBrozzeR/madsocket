@@ -1,7 +1,7 @@
 const net = require('net');
 const Encoder = require('./encoder.js');
 const Handshake = require('./handshake.js');
-const ClientRequest = require('./client-request.js');
+const ClientConnection = require('./client-request.js');
 const proceedCommandFrame = require('./command-frames.js');
 const utils = require('./utils.js');
 
@@ -26,7 +26,7 @@ function bind (socket, request) {
   const server = this;
 
   if (response) {
-    const client = new ClientRequest(socket, server, request);
+    const client = new ClientConnection(socket, server, request);
     client.write(Buffer.from(response));
 
     listeners.connect && listeners.connect.call(client);
@@ -34,11 +34,7 @@ function bind (socket, request) {
     function onData (data) {
       server.debug('client', data);
 
-      const frame = Encoder.decode(data);
-
-      if (!proceedCommandFrame(frame, client)) {
-        listeners.message && listeners.message.call(client, frame.data, { fin: frame.fin, opcode: frame.opcode });
-      }
+      client.data.push(data);
     };
     function onClose () {
       listeners.disconnect && listeners.disconnect.call(client);

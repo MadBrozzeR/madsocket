@@ -65,7 +65,7 @@ function Client (listeners = {}, params = {}) {
   this.data = new Collector(Encoder.COLLECTOR_STEPS, function (info) {
     const frame = {
       type: info.flags.opcode,
-      fin: info.flags.fin ? true : false,
+      fin: info.flags.fin,
       data: info.data,
     };
     if (!proceedCommandFrame(frame, client)) {

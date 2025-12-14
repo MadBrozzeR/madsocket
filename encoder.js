@@ -24,7 +24,7 @@ const COLLECTOR_STEPS = [
       const length = 0x7f & lenFlags;
 
       return {
-        fin: 0x80 & flags,
+        fin: !!(0x80 & flags),
         opcode: 0xf & flags,
         mask: 0x80 & lenFlags ? 4 : 0,
         lengthBytes: length === 126
@@ -62,11 +62,12 @@ const COLLECTOR_STEPS = [
     id: 'data',
     length: ({ length }) => length,
     callback: function (data, { mask }) {
-      return mask ? applyMask(data) : data;
+      return mask ? applyMask(data, mask) : data;
     },
   }
 ];
 
+// deprecated
 function decode (data) {
   const reader = new Reader(data);
   const flags = reader.readUIntBE();

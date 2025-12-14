@@ -54,9 +54,9 @@ All listeners are optional, and you can ommit any listener that you are not inte
 
 First two listeners are server related. They get no arguments, but has MadSocket instance as a context (`this`).
 
-`error` events can be emitted by either MadSocket or ClientRequest instances. Error itself is being passed as an argument.
+`error` events can be emitted by either MadSocket or ClientConnection instances. Error itself is being passed as an argument.
 
-All other listeners are ClientRequest relative. They all get ClientRequest instance as a context (`this`),
+All other listeners are ClientConnection relative. They all get ClientConnection instance as a context (`this`),
 and only `message` listener receives actual message as function argument.
 
 ### ws.listen
@@ -104,10 +104,11 @@ Given example should be enough for sharing single connection port between WebSoc
 
 In this case MadSocket server itself is never being started, so `start` and `close` events will never be triggered.
 
-## ClientRequest instance
+## ClientConnection instance
 
-When any ClientRequest relative event (connect, disconnect, message) occures, corresponding listener is being called with
-ClientRequest instance as a context. So you can use `this` keyword to gain access to this instance and its methods.
+When any ClientConnection relative event (connect, disconnect, message) occures, corresponding listener is being
+called with ClientConnection instance as a context. So you can use `this` keyword to gain access
+to this instance and its methods.
 
 ### client.send
 

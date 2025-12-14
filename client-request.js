@@ -1,15 +1,33 @@
+const { Collector } = require('./collector.js');
 const Encoder = require('./encoder.js');
+const proceedCommandFrame = require('./command-frames.js');
 
-function ClientRequest (socket, server, request) {
+function ClientConnection (socket, server, request) {
+  const client = this;
+
   this.socket = socket;
   this.server = server;
   this.request = request;
   this.header = request.headers;
+  this.data = new Collector(Encoder.COLLECTOR_STEPS, function (info) {
+    const frame = {
+      type: info.flags.opcode,
+      fin: info.flags.fin,
+      data: info.data,
+    };
+
+    if (!proceedCommandFrame(frame, client)) {
+      server.listeners.message && server.listeners.message.call(client, frame.data, {
+        fin: frame.fin,
+        opcode: frame.opcode
+      });
+    }
+  });
 }
-ClientRequest.prototype.send = function (message, params) {
+ClientConnection.prototype.send = function (message, params) {
   this.write(Encoder.encode(message, params));
 };
-ClientRequest.prototype.write = function (data) {
+ClientConnection.prototype.write = function (data) {
   if (this.socket.writable) {
     this.server.debug('server', data);
     this.socket.write(data);
@@ -17,7 +35,7 @@ ClientRequest.prototype.write = function (data) {
     this.server.debug('server', 'not-writable');
   }
 };
-ClientRequest.prototype.close = function (status = 1000, reason = '') {
+ClientConnection.prototype.close = function (status = 1000, reason = '') {
   if (!this.socket.writable) {
     return;
   }
@@ -37,4 +55,4 @@ ClientRequest.prototype.close = function (status = 1000, reason = '') {
   this.socket.end(data);
 };
 
-module.exports = ClientRequest;
+module.exports = ClientConnection;
