@@ -138,6 +138,5 @@ function encode (data, params = {}) {
 module.exports = {
   encode: encode,
   decode: decode,
-  TYPE: TYPE,
   COLLECTOR_STEPS: COLLECTOR_STEPS,
 };

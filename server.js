@@ -2,8 +2,8 @@ const net = require('net');
 const Encoder = require('./encoder.js');
 const Handshake = require('./handshake.js');
 const ClientConnection = require('./client-request.js');
-const proceedCommandFrame = require('./command-frames.js');
 const utils = require('./utils.js');
+const { OPCODE } = require('./constants.js');
 
 const CLOSE = 'close';
 const CONNECTION = 'connection';
@@ -12,7 +12,7 @@ const TIMEOUT = 'timeout';
 const ERROR = 'error';
 const DEFAULT_TIMEOUT = 0;
 
-const TIMEOUT_MESSAGE = Encoder.encode(Buffer.from('03e954696d656f7574', 'hex'), { opcode: Encoder.TYPE.CLOSE });
+const TIMEOUT_MESSAGE = Encoder.encode(Buffer.from('03e954696d656f7574', 'hex'), { opcode: OPCODE.CLOSE });
 
 function onTimeout () {
   utils.socketEnd(this, TIMEOUT_MESSAGE);

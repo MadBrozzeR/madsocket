@@ -1,18 +1,15 @@
-const Encoder = require('./encoder.js');
-const utils = require('./utils.js');
-
-const TYPE = Encoder.TYPE;
+const { OPCODE } = require('./constants.js');
 
 function proceedCommandFrame (frame, client) {
-  if (frame.type === TYPE.CLOSE) {
+  if (frame.type === OPCODE.CLOSE) {
     const status = frame.data.slice(0, 2);
     client.close(status);
 
     return true;
   }
 
-  if (frame.type === TYPE.PING) {
-    client.send(frame.data, { opcode: TYPE.PONG });
+  if (frame.type === OPCODE.PING) {
+    client.send(frame.data, { opcode: OPCODE.PONG });
 
     return true;
   }

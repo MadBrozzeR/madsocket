@@ -1,10 +1,24 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 import { Socket } from 'net';
-import { OPCODE } from './constants';
+
+type Opcodes = {
+  CONTINUATION: 0x0;
+  TEXT: 0x1;
+  BINARY: 0x2;
+  CLOSE: 0x8;
+  PING: 0x9;
+  PONG: 0xa;
+};
 
 type MessageParams = {
   fin: boolean;
-  opcode: (typeof OPCODE)[keyof typeof OPCODE];
+  opcode: Opcodes[keyof Opcodes];
+};
+
+type Frame = {
+  type: number;
+  fin: boolean;
+  data: Buffer;
 };
 
 type Listeners = {
@@ -16,6 +30,7 @@ type Listeners = {
   connect?: (this: ClientConnection) => void;
   disconnect?: (this: ClientConnection) => void;
   message?: (this: ClientConnection, message: Buffer, params: MessageParams) => void;
+  frame?: (this: ClientConnection, frame: Frame) => void;
 };
 
 type Props = {
@@ -38,6 +53,7 @@ export class ClientConnection {
   request: IncomingMessage;
   send(message: string, params?: Partial<MessageParams>);
   close(status?: number, reason?: string);
+  ping(message?: string, timeout?: number): Promise<boolean>;
 }
 
 type ClientListeners = {
@@ -67,3 +83,5 @@ export class MadSocketClient {
   close(): void;
   send(data: string | Buffer, params?: Partial<MessageParams>): void;
 }
+
+export const OPCODE: Opcodes;
