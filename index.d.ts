@@ -51,9 +51,10 @@ export class MadSocket {
 
 export class ClientConnection {
   request: IncomingMessage;
-  send(message: string, params?: Partial<MessageParams>);
+  send(message: string, params?: Partial<MessageParams>): Promise<Buffer>;
   close(status?: number, reason?: string);
   ping(message?: string, timeout?: number): Promise<boolean>;
+  write(data: string | Buffer): Promise<Buffer>;
 }
 
 type ClientListeners = {

@@ -32,15 +32,22 @@ function ClientConnection (socket, server, request) {
   });
 }
 ClientConnection.prototype.send = function (message, params) {
-  this.write(Encoder.encode(message, params));
+  return this.write(Encoder.encode(message, params));
 };
 ClientConnection.prototype.write = function (data) {
-  if (this.socket.writable) {
-    this.server.debug('server', data);
-    this.socket.write(data);
-  } else {
-    this.server.debug('server', 'not-writable');
-  }
+  const dataToSend = data instanceof Buffer ? data : Buffer.from(data);
+
+  return new Promise(function (resolve, reject) {
+    if (this.socket.writable) {
+      this.server.debug('server', data);
+      this.socket.write(dataToSend, function () {
+        resolve(dataToSend);
+      });
+    } else {
+      this.server.debug('server', 'not-writable');
+      reject(new Error('Socket is not writable'));
+    }
+  });
 };
 ClientConnection.prototype.close = function (status = 1000, reason = '') {
   if (!this.socket.writable) {
