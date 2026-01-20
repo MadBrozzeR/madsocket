@@ -35,16 +35,17 @@ ClientConnection.prototype.send = function (message, params) {
   return this.write(Encoder.encode(message, params));
 };
 ClientConnection.prototype.write = function (data) {
+  const client = this;
   const dataToSend = data instanceof Buffer ? data : Buffer.from(data);
 
   return new Promise(function (resolve, reject) {
-    if (this.socket.writable) {
-      this.server.debug('server', data);
-      this.socket.write(dataToSend, function () {
+    if (client.socket.writable) {
+      client.server.debug('server', data);
+      client.socket.write(dataToSend, function () {
         resolve(dataToSend);
       });
     } else {
-      this.server.debug('server', 'not-writable');
+      client.server.debug('server', 'not-writable');
       reject(new Error('Socket is not writable'));
     }
   });
