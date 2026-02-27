@@ -38,7 +38,7 @@ function getHttpPayload (data) {
   try {
     const separatorPosition = data.indexOf(EMPTY_LINE);
     message = getHead(data.substring(0, separatorPosition));
-    message.body = data.substring(separatorPosition + 2);
+    message.body = separatorPosition > -1 ? data.substring(separatorPosition + 2) : '';
   } catch (error) {
     message = null;
   }
@@ -69,14 +69,25 @@ function getBadResponse () {
 }
 
 function validateServerHandshake (response, key) {
-  const httpPayload = getHttpPayload(response);
-  const acceptHeader = httpPayload.headers['sec-websocket-accept'];
   const result = {
     success: true,
+    headers: null,
+    status: 0,
     errorMessage: '',
   };
 
-  if (httpPayload.status !== '101') {
+  const httpPayload = getHttpPayload(response);
+
+  if (!httpPayload) {
+    result.success = false;
+    result.errorMessage = 'Unparsable handshake response';
+  }
+
+  result.status = parseInt(httpPayload.status, 10);
+  result.headers = httpPayload.headers;
+  const acceptHeader = httpPayload.headers['sec-websocket-accept'];
+
+  if (result.status !== 101) {
     result.success = false;
     result.errorMessage = 'Server returned status ' + httpPayload.status;
   } else if (!acceptHeader || acceptHeader !== getAccept(key)) {

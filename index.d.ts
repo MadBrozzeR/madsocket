@@ -57,11 +57,19 @@ export class ClientConnection {
   write(data: string | Buffer): Promise<Buffer>;
 }
 
+type HandshakeInfo = {
+  success: boolean;
+  status: number;
+  headers: IncomingMessage['headers'];
+  errorMessage: string;
+};
+
 type ClientListeners = {
   error?: (this: MadSocketClient, error: any) => void;
   message?: (this: MadSocketClient, message: Buffer, params: MessageParams) => void;
   connect?: (this: MadSocketClient) => void;
   disconnect?: (this: MadSocketClient) => void;
+  handshake?: (this: MadSocketClient, info: HandshakeInfo) => void;
 };
 
 type ClientParams = {
