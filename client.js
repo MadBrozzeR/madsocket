@@ -10,15 +10,13 @@ const { Collector } = require('./collector.js');
 const URL_RE = /(ws|wss):\/\/([^\/:]+)(:\d+)?(\/.*)?/
 
 function bind (client, socket) {
-  const oldSocket = client.socket;
+  if (client.socket) {
+    client.close();
+  }
+
+  client.socket = socket;
   client.status = 'handshake';
   const listeners = client.listeners;
-
-  socket.once('connect', function () {
-    client.debug.call(client, 'connected');
-    const handshake = useTemplate(CLIENT_HANDSHAKE_TEMPLATE, { host, path, key });
-    client.write(Buffer.from(handshake));
-  });
 
   socket.on('data', function (data) {
     client.debug.call(client, 'server', data);
@@ -30,12 +28,6 @@ function bind (client, socket) {
         listeners.handshake && listeners.handshake.call(client, result);
 
         if (result.success) {
-          if (oldSocket) {
-            oldSocket.removeAllListeners();
-            oldSocket.writable && oldSocket.end();
-          }
-
-          client.socket = socket;
           client.status = 'active';
           listeners.connect && listeners.connect.call(client);
         } else {
@@ -121,12 +113,20 @@ Client.prototype.connect = function (url) {
   const options = isSecure ? { servername: host } : {};
   const key = this.key = generateClientKey();
 
-  bind(this, (isSecure ? tls : net).connect(port, host, options));
+  const socket = (isSecure ? tls : net).connect(port, host, options, function () {
+    client.debug.call(client, 'connected');
+    const handshake = useTemplate(CLIENT_HANDSHAKE_TEMPLATE, { host, path, key });
+    client.write(Buffer.from(handshake));
+  });
+
+  bind(this, socket);
 
   return this;
 }
 
 Client.prototype.close = function () {
+  this.socket && this.socket.removeAllListeners();
+
   if (this.socket.writable) {
     this.debug.call(this, 'end', true);
     this.socket.end();
