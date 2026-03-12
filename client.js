@@ -7,10 +7,12 @@ const Encoder = require('./encoder.js');
 const proceedCommandFrame = require('./command-frames.js');
 const { Collector } = require('./collector.js');
 
-const URL_RE = /(ws|wss):\/\/([^\/:]+)(:\d+)?(\/.*)?/
+const URL_RE = /(ws|wss):\/\/([^\/:]+)(:\d+)?(\/.*)?/;
 
-function bind (client, socket) {
-  if (client.socket) {
+function bind (client, socket, params) {
+  const closeSocket = params.socketClose || 'before';
+  const oldSocket = client.socket;
+  if (oldSocket && closeSocket === 'before') {
     client.close();
   }
 
@@ -18,28 +20,36 @@ function bind (client, socket) {
   client.status = 'handshake';
   const listeners = client.listeners;
 
-  socket.on('data', function (data) {
-    client.debug.call(client, 'server', data);
+  const promise = new Promise(function (resolve, reject) {
+    socket.on('data', function (data) {
+      client.debug.call(client, 'server', data);
 
-    switch (client.status) {
-      case 'handshake':
-        const result = Handshake.validateServerHandshake(data, client.key);
+      switch (client.status) {
+        case 'handshake':
+          const result = Handshake.validateServerHandshake(data, client.key);
 
-        listeners.handshake && listeners.handshake.call(client, result);
+          listeners.handshake && listeners.handshake.call(client, result);
 
-        if (result.success) {
-          client.status = 'active';
-          listeners.connect && listeners.connect.call(client);
-        } else {
-          client.status = 'error';
-          listeners.error && listeners.error.call(client, new Error(result.errorMessage));
-          // client.close();
-        }
-        break;
-      case 'active':
-        client.data.push(data);
-        break;
-    }
+          if (result.success) {
+            if (oldSocket && closeSocket === 'after') {
+              oldSocket.close();
+            }
+            client.status = 'active';
+            listeners.connect && listeners.connect.call(client);
+            resolve(client);
+          } else {
+            client.status = 'error';
+            const error = new Error(result.errorMessage);
+            listeners.error && listeners.error.call(client, error);
+            reject(error);
+            // client.close();
+          }
+          break;
+        case 'active':
+          client.data.push(data);
+          break;
+      }
+    });
   });
 
   socket.on('close', function () {
@@ -57,10 +67,10 @@ function bind (client, socket) {
     // client.close();
   });
 
-  return client;
+  return promise;
 }
 
-function Client (listeners = {}, params = {}) {
+function MadSocketClient (listeners = {}, params = {}) {
   const client = this;
   this.url = params.url || '';
   this.listeners = listeners; // error, message, connect, disconnect
@@ -80,7 +90,7 @@ function Client (listeners = {}, params = {}) {
   });
 };
 
-Client.prototype.on = function (listeners) {
+MadSocketClient.prototype.on = function (listeners) {
   for (const key in listeners) {
     this.listeners[key] = listeners[key];
   }
@@ -88,8 +98,10 @@ Client.prototype.on = function (listeners) {
   return this;
 }
 
-Client.prototype.connect = function (url) {
+MadSocketClient.prototype.connect = function (params) {
+  params || (params = {});
   const client = this;
+  const url = params.url;
 
   if (url) {
     this.url = url;
@@ -119,12 +131,10 @@ Client.prototype.connect = function (url) {
     client.write(Buffer.from(handshake));
   });
 
-  bind(this, socket);
-
-  return this;
+  return bind(this, socket, params);
 }
 
-Client.prototype.close = function () {
+MadSocketClient.prototype.close = function () {
   this.socket && this.socket.removeAllListeners();
 
   if (this.socket.writable) {
@@ -139,13 +149,13 @@ Client.prototype.close = function () {
   }
 }
 
-Client.prototype.send = function (message, params) {
+MadSocketClient.prototype.send = function (message, params) {
   const mask = generateMask();
   const data = Encoder.encode(message, { opcode: params.opcode, fin: params.fin, mask: mask });
   this.write(data);
 }
 
-Client.prototype.write = function (data) {
+MadSocketClient.prototype.write = function (data) {
   if (this.socket.writable) {
     this.debug.call(this, 'client', data);
     this.socket.write(data);
@@ -154,8 +164,8 @@ Client.prototype.write = function (data) {
   }
 }
 
-Client.connect = function (url, listeners) {
-  return new Client(listeners).connect(url);
+MadSocketClient.connect = function (url, listeners) {
+  return new MadSocketClient(listeners).connect({ url: url });
 }
 
-module.exports = Client;
+module.exports = MadSocketClient;

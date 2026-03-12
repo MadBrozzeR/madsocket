@@ -77,6 +77,11 @@ type ClientParams = {
   debug?: (this: MadSocketClient, type: string, data?: any) => void;
 };
 
+type ConnectParams = {
+  url?: string;
+  socketClose?: 'before' | 'after' | 'keep';
+};
+
 export class MadSocketClient {
   url: string;
   listeners: ClientListeners;
@@ -88,7 +93,7 @@ export class MadSocketClient {
 
   constructor(listeners?: ClientListeners, params?: ClientParams);
   on(listeners: ClientListeners): this;
-  connect(url?: string): this;
+  connect(params?: ConnectParams): Promise<MadSocketClient>;
   close(): void;
   send(data: string | Buffer, params?: Partial<MessageParams>): void;
 }
