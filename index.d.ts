@@ -74,6 +74,7 @@ type ClientListeners = {
 
 type ClientParams = {
   url?: string;
+  closeOldSocket?: 'before' | 'after' | 'keep';
   debug?: (this: MadSocketClient, type: string, data?: any) => void;
 };
 
@@ -84,6 +85,7 @@ type ConnectParams = {
 
 export class MadSocketClient {
   url: string;
+  params: ClientParams;
   listeners: ClientListeners;
   socket: Socket | null;
   status: 'init' | 'handshake' | 'active' | 'error' | 'closed';
@@ -94,7 +96,7 @@ export class MadSocketClient {
   constructor(listeners?: ClientListeners, params?: ClientParams);
   on(listeners: ClientListeners): this;
   connect(params?: ConnectParams): Promise<MadSocketClient>;
-  close(): void;
+  close(socket?: Socket): void;
   send(data: string | Buffer, params?: Partial<MessageParams>): void;
 }
 

@@ -10,7 +10,7 @@ const { Collector } = require('./collector.js');
 const URL_RE = /(ws|wss):\/\/([^\/:]+)(:\d+)?(\/.*)?/;
 
 function bind (client, socket, params) {
-  const closeSocket = params.socketClose || 'before';
+  const closeSocket = params.socketClose || client.params.closeOldSocket || 'before';
   const oldSocket = client.socket;
   if (oldSocket && closeSocket === 'before') {
     client.close();
@@ -32,7 +32,7 @@ function bind (client, socket, params) {
 
           if (result.success) {
             if (oldSocket && closeSocket === 'after') {
-              oldSocket.close();
+              client.close(oldSocket);
             }
             client.status = 'active';
             listeners.connect && listeners.connect.call(client);
@@ -72,6 +72,7 @@ function bind (client, socket, params) {
 
 function MadSocketClient (listeners = {}, params = {}) {
   const client = this;
+  this.params = params;
   this.url = params.url || '';
   this.listeners = listeners; // error, message, connect, disconnect
   this.socket = null;
@@ -134,17 +135,17 @@ MadSocketClient.prototype.connect = function (params) {
   return bind(this, socket, params);
 }
 
-MadSocketClient.prototype.close = function () {
-  this.socket && this.socket.removeAllListeners();
+MadSocketClient.prototype.close = function (socket = this.socket) {
+  socket && socket.removeAllListeners();
 
   if (this.socket.writable) {
     this.debug.call(this, 'end', true);
-    this.socket.end();
+    socket.end();
   } else {
     this.debug.call(this, 'warning', 'end:not-writable');
   }
 
-  if (this.status === 'active') {
+  if (this.status === 'active' && socket === this.socket) {
     this.status = 'closed';
   }
 }
