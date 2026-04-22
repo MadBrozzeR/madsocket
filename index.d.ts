@@ -96,7 +96,8 @@ export class MadSocketClient {
   constructor(listeners?: ClientListeners, params?: ClientParams);
   on(listeners: ClientListeners): this;
   connect(params?: ConnectParams): Promise<MadSocketClient>;
-  close(socket?: Socket): void;
+  close(): void;
+  closeSocket(socket: Socket): void;
   send(data: string | Buffer, params?: Partial<MessageParams>): void;
 }
 

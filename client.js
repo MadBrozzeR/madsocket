@@ -135,10 +135,10 @@ MadSocketClient.prototype.connect = function (params) {
   return bind(this, socket, params);
 }
 
-MadSocketClient.prototype.close = function (socket = this.socket) {
+MadSocketClient.prototype.closeSocket = function (socket) {
   socket && socket.removeAllListeners();
 
-  if (this.socket.writable) {
+  if (socket.writable) {
     this.debug.call(this, 'end', true);
     socket.end();
   } else {
@@ -148,6 +148,10 @@ MadSocketClient.prototype.close = function (socket = this.socket) {
   if (this.status === 'active' && socket === this.socket) {
     this.status = 'closed';
   }
+}
+
+MadSocketClient.prototype.close = function () {
+  this.closeSocket(this.socket);
 }
 
 MadSocketClient.prototype.send = function (message, params) {

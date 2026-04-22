@@ -1,6 +1,6 @@
 {
   "name": "madsocket",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "WebSocket server",
   "main": "index.js",
   "scripts": {
